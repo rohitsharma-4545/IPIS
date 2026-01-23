@@ -1,0 +1,74 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+/* ---------- PDC DEVICE ---------- */
+model PdcDevice {
+  id          Int      @id @default(autoincrement())
+  vendor      String
+  device      String   // "PDC"
+  ip          String   @unique
+  pf          String   @unique
+  lastSeen    DateTime @updatedAt
+
+  displayDevices DisplayDevice[]
+
+  @@index([vendor])
+  @@index([pf])
+}
+ 
+/* ---------- TRAIN DATA ---------- */
+model Train {
+  id        Int      @id @default(autoincrement())
+  tno       String   @unique
+  tne       String
+  tnh       String
+  tnr       String
+  adf       String
+  sat       String
+  sdt       String
+  pno       String
+  sta       String
+  ccd       String
+  colors    Json
+  updatedAt DateTime @updatedAt
+
+  @@index([pno])
+}
+
+/* ---------- LINE CONFIG ---------- */
+model LineConfig {
+  id        Int      @id @default(autoincrement())
+  int       Int
+  pto       Int
+  dtp       Int
+  chr       Int
+  eff       Int
+  spd       Int
+  vid       String?
+  img       String?
+  tod       String
+  rst       String
+  updatedAt DateTime @updatedAt
+}
+
+/* ---------- DISPLAY DEVICES ---------- */
+model DisplayDevice {
+  id         Int      @id @default(autoincrement())
+  vendor     String
+  device     String   // MLD, PFD, AGD, CGD
+  ip         String   @unique
+  pf         String
+  int        Int
+  hsr        String
+  lastPoll   DateTime @updatedAt
+
+  pdcDevice  PdcDevice @relation(fields: [pf], references: [pf], onDelete: Cascade)
+
+  @@index([vendor])
+  @@index([pf])
+}
