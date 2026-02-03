@@ -1,19 +1,51 @@
+"use client";
+import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Activity, Monitor, Database, RefreshCcw } from "lucide-react";
 
 export default function Home() {
+  const [loading, setLoading] = useState<string | null>(null);
+
+  const pollCDC = async () => {
+    setLoading("cdc");
+    await fetch("/api/test/cdc", { method: "POST" });
+    setLoading(null);
+  };
+
+  const pollCDCConfig = async () => {
+    setLoading("config");
+    await fetch("/api/test/cdc-config", { method: "POST" });
+    setLoading(null);
+  };
+
   return (
     <div className="min-h-screen bg-zinc-100 dark:bg-black px-6 py-8">
       <header className="mb-8 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <h1 className="text-2xl font-semibold text-zinc-900 dark:text-zinc-100">
-            IPIS – PDC Dashboard
-          </h1>
+        <h1 className="text-2xl font-semibold text-zinc-900 dark:text-zinc-100">
+          IPIS – PDC Dashboard
+        </h1>
+
+        <div className="flex gap-3">
+          <Button
+            onClick={pollCDC}
+            disabled={loading === "cdc"}
+            className="gap-2"
+          >
+            <RefreshCcw size={16} />
+            {loading === "cdc" ? "Polling…" : "Poll CDC"}
+          </Button>
+
+          <Button
+            variant="outline"
+            onClick={pollCDCConfig}
+            disabled={loading === "config"}
+            className="gap-2"
+          >
+            <RefreshCcw size={16} />
+            {loading === "config" ? "Polling…" : "Poll Config"}
+          </Button>
         </div>
-        <Button className="gap-2">
-          <RefreshCcw size={16} /> Poll CDC
-        </Button>
       </header>
 
       <section className="grid grid-cols-1 gap-6 md:grid-cols-3">
@@ -70,7 +102,7 @@ export default function Home() {
                 PTO: <b>10</b>
               </p>
               <p>
-                DTP: <b>60</b>
+                DTO: <b>60</b>
               </p>
               <p>
                 CHR: <b>3</b>

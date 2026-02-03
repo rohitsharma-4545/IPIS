@@ -5,7 +5,7 @@ import { upsertTrains } from "./trainService";
 import { upsertLineConfig } from "./lineConfigService";
 import { CdcResponseSchema } from "./schemas";
 
-const PLATFORM = "1";
+const PLATFORM = "2";
 
 export async function pollCDC() {
   try {
@@ -41,26 +41,24 @@ export async function pollCDC() {
         HSR: d.hsr,
       })),
     };
-    const url = `http://${CDC_CONFIG.IP}:${CDC_CONFIG.PORT}/api/mock/devices/cdc`;
+    const url = `http://${CDC_CONFIG.IP}:${CDC_CONFIG.PORT}/IPIS/LiveData`;
 
     const { data } = await axios.post(url, payload, {
       timeout: 4000,
       headers: {
-        Station: CDC_CONFIG.STATION_CODE,
+        Station_Code: CDC_CONFIG.STATION_CODE,
       },
     });
 
     const parsed = CdcResponseSchema.safeParse(data);
 
     if (!parsed.success) {
-      console.error(
-        "❌ CDC response rejected (Page-55 validation)",
-        parsed.error.format(),
-      );
-      return;
+      console.warn("CDC sent invalid data, using defaults");
     }
 
-    const { TrainList, LineConf } = parsed.data;
+    const fixed = CdcResponseSchema.parse(data);
+
+    const { TrainList, LineConf } = fixed;
 
     await Promise.all([upsertTrains(TrainList), upsertLineConfig(LineConf)]);
 

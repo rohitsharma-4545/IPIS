@@ -6,7 +6,6 @@ datasource db {
   provider = "postgresql"
 }
 
-/* ---------- PDC DEVICE ---------- */
 model PdcDevice {
   id          Int      @id @default(autoincrement())
   vendor      String
@@ -21,7 +20,6 @@ model PdcDevice {
   @@index([pf])
 }
  
-/* ---------- TRAIN DATA ---------- */
 model Train {
   id        Int      @id @default(autoincrement())
   tno       String   @unique
@@ -29,40 +27,40 @@ model Train {
   tnh       String
   tnr       String
   adf       String
-  sat       String
-  sdt       String
+  eat       String?
+  edt       String
   pno       String
   sta       String
   ccd       String
-  colors    Json
   updatedAt DateTime @updatedAt
 
   @@index([pno])
 }
 
-/* ---------- LINE CONFIG ---------- */
 model LineConfig {
   id        Int      @id @default(autoincrement())
   int       Int
   pto       Int
-  dtp       Int
+  dto       Int
   chr       Int
   eff       Int
   spd       Int
-  vid       String?
-  img       String?
+  msg       String?
+  mst       String?
   tod       String
   rst       String
   updatedAt DateTime @updatedAt
 }
 
-/* ---------- DISPLAY DEVICES ---------- */
 model DisplayDevice {
   id         Int      @id @default(autoincrement())
   vendor     String
-  device     String   // MLD, PFD, AGD, CGD
+  device     String
   ip         String   @unique
+
   pf         String
+  pno        Int?
+
   int        Int
   hsr        String
   lastPoll   DateTime @updatedAt
@@ -71,4 +69,16 @@ model DisplayDevice {
 
   @@index([vendor])
   @@index([pf])
+  @@index([pno])
 }
+
+model PdcConfig {
+  id  Int    @id @default(1)
+
+  nod Int    // No of displays
+  tod String
+  rst String
+
+  updatedAt DateTime @updatedAt
+}
+
