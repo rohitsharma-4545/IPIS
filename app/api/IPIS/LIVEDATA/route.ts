@@ -1,60 +1,58 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/app/lib/prisma";
 import { validateRequest } from "@/app/lib/validate";
-import { DisplayLiveDataSchema } from "./schema";
+import { LiveDataSchema } from "../schemas";
+import { CDC_CONFIG } from "@/app/config/cdc";
 
 export async function POST(req: Request) {
   try {
-    const validated = await validateRequest(req, DisplayLiveDataSchema);
+    const stationCode = req.headers.get("Station_Code");
+
+    if (stationCode !== CDC_CONFIG.STATION_CODE) {
+      return NextResponse.json(
+        { error: "Unauthorized: Invalid Station Code" },
+        { status: 401 },
+      );
+    }
+
+    const validated = await validateRequest(req, LiveDataSchema);
 
     if (validated instanceof NextResponse) {
       return validated;
     }
 
-    const { vendor, device, ip, pf, int, hsr } = validated;
+    const { vendor, device, ip, pf, int, hsr, pno } = validated;
 
-    const displayDevice = await prisma.displayDevice.findFirst({
-      where: {
-        vendor,
-        device,
-        ip,
-        pf: String(pf),
-        int,
-        hsr,
-      },
+    const display = await prisma.displayDevice.findUnique({
+      where: { ip },
     });
 
-    if (!displayDevice) {
+    if (!display) {
       return NextResponse.json(
-        { error: "No display device present with the provided details" },
+        { error: "Display not registered" },
         { status: 404 },
       );
     }
 
-    // 1️⃣ Register / Update display device
-    // await prisma.displayDevice.upsert({
-    //   where: { ip: ip },
-    //   update: {
-    //     vendor,
-    //     device,
-    //     pf: String(pf),
-    //     int: int,
-    //     hsr: hsr,
-    //   },
-    //   create: {
-    //     vendor,
-    //     device,
-    //     ip: ip,
-    //     pf: String(pf),
-    //     int: int,
-    //     hsr: hsr,
-    //   },
-    // });
+    // Update display device
+    await prisma.displayDevice.update({
+      where: { ip },
+      data: {
+        vendor,
+        device,
+        pf,
+        int,
+        hsr,
+        pno,
+      },
+    });
 
     const trains = await prisma.train.findMany({
       where: { pno: String(pf) },
-      orderBy: { sat: "asc" },
+      orderBy: { eat: "asc" },
     });
+
+    console.log(trains);
 
     const lastDigitOfIP = Number(ip.split(".").pop());
 
@@ -67,7 +65,7 @@ export async function POST(req: Request) {
             return {
               TNO: t.tno,
               NOC: ccdArray.filter(Boolean).length,
-              CCD: ccdArray[key],
+              CCD: ccdArray[key - 2],
             };
           })
         : trains.map((t) => ({
@@ -76,12 +74,11 @@ export async function POST(req: Request) {
             TNH: t.tnh,
             TNR: t.tnr,
             ADF: t.adf,
-            SAT: t.sat,
-            SDT: t.sdt,
+            EAT: t.eat,
+            EDT: t.edt,
             PNO: t.pno,
             STA: t.sta,
             CCD: t.ccd,
-            COL: t.colors,
           }));
 
     const lineConf = await prisma.lineConfig.findFirst();
@@ -93,7 +90,7 @@ export async function POST(req: Request) {
             {
               INT: lineConf.int,
               PTO: lineConf.pto,
-              DTP: lineConf.dtp,
+              dto: lineConf.dto,
               CHR: lineConf.chr,
               EFF: lineConf.eff,
               SPD: lineConf.spd,

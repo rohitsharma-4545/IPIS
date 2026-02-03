@@ -29,8 +29,6 @@ export async function pollCdcConfig() {
       },
     });
 
-    console.log(data);
-
     const parsed = CdcConfigResponseSchema.safeParse(data);
 
     if (!parsed.success) {

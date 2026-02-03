@@ -3,19 +3,18 @@ import { z } from "zod";
 const IP_REGEX =
   /^(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}$/;
 
-export const CreatePdcDeviceSchema = z.object({
-  vendor: z.string().min(1),
-  device: z.literal("PDC"),
-  ip: z.string().regex(IP_REGEX, "Invalid IP Address"),
-  pf: z.string().min(1),
-});
-
-export const CreateDisplayDeviceSchema = z.object({
+export const LiveDataSchema = z.object({
   vendor: z.string().min(1),
   device: z.enum(["MLD", "PFD", "AGD", "CGD"]),
   ip: z.string().regex(IP_REGEX, "Invalid IP Address"),
   pf: z.string().min(1),
-  int: z.number().int().positive(),
+  pno: z.number().int().nonnegative().optional(),
+  int: z.number().int().nonnegative(),
   hsr: z.string().min(1),
-  pno: z.int().optional(),
+});
+
+export const ConfDataSchema = z.object({
+  vendor: z.string().min(1),
+  device: z.enum(["MLD", "PFD", "AGD", "CGD"]),
+  ip: z.string().regex(IP_REGEX, "Invalid IP Address"),
 });
