@@ -81,6 +81,18 @@ export async function pollCdcConfig() {
     });
 
     console.log("✅ CDC Config synced");
+
+    /* ---------- Handle Soft Reset ---------- */
+    if (DevConf[0].RST === "Y") {
+      console.warn("⚠️ Soft Reset triggered by CDC");
+
+      await prisma.$transaction([
+        prisma.train.deleteMany(),
+        prisma.lineConfig.deleteMany(),
+      ]);
+
+      console.log("🧹 Trains and LineConfig cleared due to RST=Y");
+    }
   } catch (err) {
     console.error("❌ CDC Config poll failed", err);
   }

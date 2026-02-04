@@ -52,8 +52,6 @@ export async function POST(req: Request) {
       orderBy: { eat: "asc" },
     });
 
-    console.log(trains);
-
     const lastDigitOfIP = Number(ip.split(".").pop());
 
     const TrainList =
